@@ -1,0 +1,8 @@
+-e .
+
+flake8
+mypy
+coverage
+check-manifest
+zest.releaser[recommended]
+tox
