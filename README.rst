@@ -93,7 +93,7 @@ It is also possible to split by maximal section size:
 ``kconfgen assemble``
 """""""""""""""""""""
 
-Assemble a ``.config`` or ``defconfig`` file for a specific profile:
+Assemble a ``defconfig`` file for a specific profile:
 
 .. code-block:: sh
 
