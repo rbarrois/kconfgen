@@ -47,4 +47,6 @@ choice STEAK_COOKING
     bool "burnt"
 endchoice
 
+source "fillings/extras/Kconfig"
+
 endmenu

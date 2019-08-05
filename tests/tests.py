@@ -164,20 +164,20 @@ CONFIG_DIET_NO_MILK_BASED=y
 CONFIG_PICKLES=y
 CONFIG_STEAK_CHICKEN=y
 CONFIG_BREAD_POTATO=y""",
-            categories=['fillings'],
+            categories=['fillings/extras'],
             expected={
                 'defconfig': """CONFIG_SIDE_SALAD=y
 CONFIG_DIET_NO_MILK_BASED=y
 CONFIG_BREAD_POTATO=y
-CONFIG_PICKLES=y
+CONFIG_STEAK_CHICKEN=y
 """,
-                'defconfig.fillings': 'CONFIG_STEAK_CHICKEN=y\n',
+                'defconfig.fillings_extras': 'CONFIG_PICKLES=y\n',
             },
         )
 
     def test_cli(self):
         with open(self.workdir / 'categories', 'w', encoding='utf-8') as f:
-            f.write('bread\nfillings')
+            f.write('bread\nfillings/extras')
         with open(self.workdir / 'defconfig', 'w', encoding='utf-8') as f:
             f.write("""
 CONFIG_CHEDDAR=y
@@ -202,8 +202,8 @@ CONFIG_PICKLES=y""")
 
         expected = {
             'cli_test.bread': "CONFIG_BREAD_POTATO=y\n",
-            'cli_test.fillings': "CONFIG_EXTRA_CHEDDAR=y\nCONFIG_STEAK_CHICKEN=y\n",
-            'cli_test': "CONFIG_SAUCE_MAYO=y\nCONFIG_PICKLES=y\n",
+            'cli_test': "CONFIG_EXTRA_CHEDDAR=y\nCONFIG_STEAK_CHICKEN=y\n",
+            'cli_test.fillings_extras': "CONFIG_SAUCE_MAYO=y\nCONFIG_PICKLES=y\n",
         }
         filenames = os.listdir(self.workdir / 'generated')
         self.assertEqual(set(expected.keys()), set(filenames))

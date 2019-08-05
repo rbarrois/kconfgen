@@ -40,6 +40,5 @@ choice DIETARY_CONSTRAINTS
 endchoice
 
 source "bread/Kconfig"
-source "extras/Kconfig"
 source "fillings/Kconfig"
 
