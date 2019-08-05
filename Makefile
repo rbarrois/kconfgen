@@ -8,6 +8,10 @@ SETUP_PY=setup.py
 COVERAGE = python $(shell which coverage)
 FLAKE8 = flake8
 MYPY = mypy
+MUTPY = mut.py
+
+MUTPY_REPORTS = reports/mutpy/
+COVERAGE_REPORTS = reports/coverage
 
 
 all: default
@@ -54,9 +58,9 @@ testall:
 test:
 	python -Wdefault -m unittest discover
 
-# DOC: Test the examples
-example-test:
-	$(MAKE) -C $(EXAMPLES_DIR) test
+# DOC: Run mutation testing
+mutation-test:
+	$(MUTPY) --report-html $(MUTPY_REPORTS) --target $(PACKAGE) --unit-test $(TESTS_DIR)
 
 
 
@@ -79,10 +83,10 @@ coverage:
 	$(COVERAGE) erase
 	$(COVERAGE) run "--include=$(SRC_DIR)/*.py,$(TESTS_DIR)/*.py" --branch $(SETUP_PY) test
 	$(COVERAGE) report "--include=$(SRC_DIR)/*.py,$(TESTS_DIR)/*.py"
-	$(COVERAGE) html "--include=$(SRC_DIR)/*.py,$(TESTS_DIR)/*.py"
+	$(COVERAGE) html --dir $(COVERAGE_REPORTS) "--include=$(SRC_DIR)/*.py,$(TESTS_DIR)/*.py"
 
 
-.PHONY: test testall example-test lint flake8 check-manifest mypy coverage
+.PHONY: test testall mutation-test lint flake8 check-manifest mypy coverage
 
 
 # Documentation
