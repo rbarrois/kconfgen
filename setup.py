@@ -40,6 +40,7 @@ setup(
     python_requires=">=3.5",
     install_requires=[
         'kconfiglib',
+        'toml',
     ],
     setup_requires=[
         'setuptools>=0.8',
