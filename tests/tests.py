@@ -1,10 +1,12 @@
 import io
 import os.path
 import pathlib
+import subprocess
 import tempfile
 import typing as T
-import subprocess
 import unittest
+
+import toml
 
 import kconfgen
 
@@ -26,6 +28,88 @@ class KConfGenTestCase(unittest.TestCase):
     def tearDown(self):
         self._workdir.cleanup()
         super().tearDown()
+
+
+class AssembleTests(KConfGenTestCase):
+    def test_load_config(self):
+        raw = """
+[shared.core]
+files = ["defconfig.crypto", "defconfig.fs"]
+
+[profile.example]
+arch = "x86"
+include = [ "shared.core", "shared.server" ]
+extras = ["defconfig.example", "defconfig.wifi_intel"]
+
+[shared.server]
+files = ["defconfig.net", "defconfig.net_netfilter"]
+"""
+
+        loaded = kconfgen.load_configuration(toml.loads(raw))
+
+        self.assertEqual(
+            kconfgen.Configuration(
+                profiles={
+                    'example': kconfgen.CfgProfile(
+                        arch='x86',
+                        include=['core', 'server'],
+                        extras=['defconfig.example', 'defconfig.wifi_intel'],
+                    ),
+                },
+                shared={
+                    'core': kconfgen.CfgShared(
+                        files=['defconfig.crypto', 'defconfig.fs'],
+                    ),
+                    'server': kconfgen.CfgShared(
+                        files=['defconfig.net', 'defconfig.net_netfilter'],
+                    ),
+                },
+            ),
+            loaded,
+        )
+
+    def assert_assemble_result(self, config: T.Text, defconfigs: T.Dict[T.Text, T.Text], expected: T.Text):
+        with open(self.workdir / kconfgen.PROFILES_FILENAME, 'w') as f:
+            f.write(config)
+
+        for fname, contents in defconfigs.items():
+            with open(self.workdir / 'defconfig.{}'.format(fname), 'w') as f:
+                f.write(contents)
+
+        subprocess.check_call([
+            'kconfgen', 'assemble',
+            '--kernel-source', KCONF_ROOT,
+            '--fail-on-unknown',
+            '--root', self.workdir,
+            '--output', self.workdir / 'output',
+            'example',
+        ])
+
+        with open(self.workdir / 'output', 'r') as f:
+            results = ''.join(f)
+        self.assertEqual(expected, results)
+
+    def test_assemble(self):
+        self.assert_assemble_result(
+            config="""
+[profile.example]
+arch = "x86"
+include = [ "shared.plusplus" ]
+extras = [ "defconfig.cheesy" ]
+[shared.plusplus]
+files = [ "defconfig.more", "defconfig.fullsides"]
+""",
+            defconfigs={
+                'cheesy': "CONFIG_CHEDDAR=y\nCONFIG_SAUCE_BLUE_CHEESE=y\nCONFIG_SIDE_FRIES_LOADED=y",
+                'more': "CONFIG_EXTRA_CHEDDAR=y",
+                'fullsides': "CONFIG_SIDE_FRIES_LOADED=y\nCONFIG_PICKLES=y",
+            },
+            expected="""CONFIG_SIDE_FRIES_LOADED=y
+CONFIG_EXTRA_CHEDDAR=y
+CONFIG_SAUCE_BLUE_CHEESE=y
+CONFIG_PICKLES=y
+""",
+        )
 
 
 class MergeTests(KConfGenTestCase):
