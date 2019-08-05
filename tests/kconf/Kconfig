@@ -1,0 +1,45 @@
+# Root
+
+choice SIDE
+    prompt "Burger with a side of?"
+
+    # Default
+    config SIDE_FRIES
+    bool "fries"
+
+    config SIDE_SALAD
+    bool "salad"
+
+    config SIDE_FRIES_LOADED
+    bool "loaded fries"
+    depends on !DIET_VEGAN && !DIET_VEGETARIAN && !DIET_NO_MILK_BASED
+    help
+        Fries with bacon and melted cheddar.
+endchoice
+
+choice DIETARY_CONSTRAINTS
+    prompt "Dietary constraints?"
+
+    # Default
+    config DIET_NONE
+    bool "None"
+
+    config DIET_NO_MILK_BASED
+    bool "No milk-based products"
+
+    config DIET_VEGETARIAN
+    bool "Vegetarian"
+    help
+        No meat products, but eggs/milk OK
+
+    config DIET_VEGAN
+    bool "Vegan"
+    help
+        No animal-based products (inc. milk, ...)
+
+endchoice
+
+source "bread/Kconfig"
+source "extras/Kconfig"
+source "fillings/Kconfig"
+

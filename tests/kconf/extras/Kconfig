@@ -1,0 +1,25 @@
+menu "extras"
+
+config SAUCE_MAYO
+    bool "Mayo"
+    default n
+
+config SAUCE_KETCHUP
+    bool "Ketchup"
+    default y
+
+config SAUCE_BLUE_CHEESE
+    bool "Blue cheese"
+    default n
+    depends on !DIET_NO_MILK_BASED && !DIET_VEGAN
+
+config PICKLES
+    bool "Pickles"
+    default n
+
+config EGG
+    bool "With an egg"
+    default n
+    depends on !DIET_VEGAN
+
+endmenu

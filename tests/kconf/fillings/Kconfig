@@ -1,0 +1,50 @@
+menu "Fillings"
+
+config CHEDDAR
+    bool "Cheddar"
+    default y
+    depends on !DIET_VEGAN && !DIET_NO_MILK_BASED
+
+config EXTRA_CHEDDAR
+    bool "Extra cheddar"
+    default n
+    depends on CHEDDAR
+
+choice STEAK
+    prompt "Steak made of:"
+
+    # Default
+    config STEAK_BEEF
+        bool "Beef"
+        depends on !DIET_VEGAN && !DIET_VEGETARIAN
+
+    config STEAK_CHICKEN
+        bool "Chicken"
+        depends on !DIET_VEGAN && !DIET_VEGETARIAN
+
+    config STEAK_SOJA
+        bool "Soja"
+endchoice
+
+choice STEAK_COOKING
+    prompt "How cooked?"
+    depends on STEAK_BEEF
+
+    # Default
+    config COOKED_MEDIUM
+    bool "medium"
+
+    config COOKED_RARE
+    bool "rare"
+
+    config COOKED_MEDIUM_RARE
+    bool "medium-rare"
+
+    config COOKED_WELL_DONE
+    bool "well done"
+
+    config COOKED_BURNT
+    bool "burnt"
+endchoice
+
+endmenu

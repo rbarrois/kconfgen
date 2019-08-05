@@ -1,0 +1,18 @@
+menu "bread"
+
+choice BREAD
+    prompt "Burger between slices of?"
+
+    # Default
+    config BREAD_STANDARD
+    bool "standard"
+
+    config BREAD_POTATO
+    bool "potato"
+
+    config BREAD_CHEESE
+    bool "with cheese"
+    depends on !DIET_VEGAN && !DIET_NO_MILK_BASED
+endchoice
+
+endmenu
