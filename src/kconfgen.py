@@ -4,6 +4,7 @@ __version__ = '0.1.0'
 
 
 import argparse
+import enum
 import os
 import pathlib
 import sys
@@ -101,44 +102,97 @@ def defconfig_split(
 
 
 def main() -> None:
+    class Mode(enum.Enum):
+        MERGE = 'merge'
+        SPLIT = 'split'
+        ASSEMBLE = 'assemble'
+
     parser = argparse.ArgumentParser(
         description="Split a defconfig file based on chosen categories"
     )
-    parser.add_argument(
-        '--kernel-source', '-k', type=str, required=True,
-        help="Path to the kernel source tree",
-    )
-    parser.add_argument(
-        '--arch', type=str, required=True,
-        help="Target architecture",
-    )
-    parser.add_argument(
-        '--fail-on-unknown', action='store_true', default=False,
-        help="Don't allow symbols unknown from the target kernel.",
-    )
-    parser.add_argument(
+    subparsers = parser.add_subparsers(help="Modes")
+    merge_parser = subparsers.add_parser('merge', help="Merge deconfig files")
+    merge_parser.set_defaults(mode=Mode.MERGE)
+    merge_parser.add_argument(
         'sources', type=pathlib.Path, nargs='+',
         help="Source files to read, in order",
     )
-    parser.add_argument(
+    merge_parser.add_argument(
         '--output', '-o', type=argparse.FileType('w', encoding='utf-8'),
         default=sys.stdout, help="Path of the generated defconfig file",
     )
+
+    split_parser = subparsers.add_parser(
+        'split',
+        help="Split a defconfig file based on chosen categories"
+    )
+    split_parser.set_defaults(mode=Mode.SPLIT)
+    split_parser.add_argument(
+        '--categories', '-c', type=argparse.FileType('r', encoding='utf-8'), required=True,
+        help="File containing categories, one per line.",
+    )
+    split_parser.add_argument(
+        '--destdir', '-d', type=str, required=True,
+        help="Directory where generated files should be written",
+    )
+    split_parser.add_argument(
+        '--prefix', '-p', type=str, default='defconfig',
+        help="Prefix for generated files",
+    )
+    split_parser.add_argument(
+        'source', type=argparse.FileType('r', encoding='utf-8'),
+        help="Source file to read",
+    )
+
+    # Common options
+    for subparser in [merge_parser, split_parser]:
+        subparser.add_argument(
+            '--kernel-source', '-k', type=str, required=True,
+            help="Path to the kernel source tree",
+        )
+        subparser.add_argument(
+            '--arch', type=str, required=True,
+            help="Target architecture",
+        )
+        subparser.add_argument(
+            '--fail-on-unknown', action='store_true', default=False,
+            help="Don't allow symbols unknown from the target kernel.",
+        )
 
     args = parser.parse_args()
     kconf = load_kconf(
         kernel_sources=pathlib.Path(args.kernel_source),
         arch=args.arch,
     )
-    stats = defconfig_merge(
-        kconf=kconf,
-        fail_on_unknown=args.fail_on_unknown,
-        sources=args.sources,
-        output=args.output,
-    )
-    sys.stderr.write(">>> Written {ns} symbols.\n".format(
-        ns=stats.nb_symbols,
-    ))
+    if args.mode == Mode.MERGE:
+        stats = defconfig_merge(
+            kconf=kconf,
+            fail_on_unknown=args.fail_on_unknown,
+            sources=args.sources,
+            output=args.output,
+        )
+        sys.stderr.write(">>> Written {ns} symbols.\n".format(
+            ns=stats.nb_symbols,
+        ))
+    elif args.mode == Mode.SPLIT:
+        try:
+            categories = [line.strip() for line in args.categories]
+
+            stats = defconfig_split(
+                kconf=kconf,
+                fail_on_unknown=args.fail_on_unknown,
+                categories=categories,
+                destdir=pathlib.Path(args.destdir),
+                source=args.source,
+                prefix=args.prefix,
+            )
+            sys.stderr.write(">>> Written {ns} symbols to files {files}.\n".format(
+                ns=stats.nb_symbols,
+                files=', '.join(str(path) for path in stats.files),
+            ))
+        finally:
+            args.categories.close()
+            args.source.close()
 
 
 if __name__ == '__main__':

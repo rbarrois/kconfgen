@@ -3,6 +3,7 @@ import os.path
 import pathlib
 import tempfile
 import typing as T
+import subprocess
 import unittest
 
 import kconfgen
@@ -76,6 +77,25 @@ CONFIG_CHEDDAR=y""",
             ],
             expected="CONFIG_SIDE_SALAD=y\nCONFIG_BREAD_POTATO=y\n",
         )
+
+    def test_cli(self):
+        with open(self.workdir / 'defconfig_extras', 'w', encoding='utf-8') as f:
+            f.write("CONFIG_EXTRA_CHEDDAR=y\n")
+        with open(self.workdir / 'defconfig', 'w', encoding='utf-8') as f:
+            f.write("CONFIG_SIDE_SALAD=y\n")
+
+        subprocess.check_call([
+            'python', '-m', 'kconfgen', 'merge',
+            '--kernel-source', KCONF_ROOT,
+            '--arch', 'x86',
+            '--fail-on-unknown',
+            self.workdir / 'defconfig_extras',
+            self.workdir / 'defconfig',
+            '--output', self.workdir / 'defconfig_merged',
+        ])
+        with open(self.workdir / 'defconfig_merged', 'r') as f:
+            generated = ''.join(f)
+        self.assertEqual("CONFIG_SIDE_SALAD=y\nCONFIG_EXTRA_CHEDDAR=y\n", generated)
 
 
 class SplitTests(KConfGenTestCase):
@@ -154,3 +174,40 @@ CONFIG_PICKLES=y
                 'defconfig.fillings': 'CONFIG_STEAK_CHICKEN=y\n',
             },
         )
+
+    def test_cli(self):
+        with open(self.workdir / 'categories', 'w', encoding='utf-8') as f:
+            f.write('bread\nfillings')
+        with open(self.workdir / 'defconfig', 'w', encoding='utf-8') as f:
+            f.write("""
+CONFIG_CHEDDAR=y
+CONFIG_EXTRA_CHEDDAR=y
+CONFIG_BREAD_POTATO=y
+CONFIG_STEAK_CHICKEN=y
+CONFIG_SAUCE_MAYO=y
+CONFIG_PICKLES=y""")
+
+        os.mkdir(self.workdir / 'generated')
+
+        subprocess.check_call([
+            'python', '-m', 'kconfgen', 'split',
+            '--kernel-source', KCONF_ROOT,
+            '--arch', 'x86',
+            '--fail-on-unknown',
+            '--categories', self.workdir / 'categories',
+            '--prefix', 'cli_test',
+            '--destdir', self.workdir / 'generated',
+            self.workdir / 'defconfig',
+        ])
+
+        expected = {
+            'cli_test.bread': "CONFIG_BREAD_POTATO=y\n",
+            'cli_test.fillings': "CONFIG_EXTRA_CHEDDAR=y\nCONFIG_STEAK_CHICKEN=y\n",
+            'cli_test': "CONFIG_SAUCE_MAYO=y\nCONFIG_PICKLES=y\n",
+        }
+        filenames = os.listdir(self.workdir / 'generated')
+        self.assertEqual(set(expected.keys()), set(filenames))
+        for filename, contents in expected.items():
+            with open(self.workdir / 'generated' / filename, 'r') as f:
+                actual_contents = ''.join(f)
+            self.assertEqual(contents, actual_contents)
