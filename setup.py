@@ -34,7 +34,7 @@ setup(
     url='https://github.com/rbarrois/%s' % PACKAGE,
     keywords=['kconfgen', 'kconfig', 'kernel', 'linux', 'configuration', 'generator'],
     packages=find_packages(SRC_DIR),
-    package_dirs={'': SRC_DIR},
+    package_dir={'': SRC_DIR},
     zip_safe=False,
     license='MIT',
     python_requires=">=3.5",
@@ -59,4 +59,9 @@ setup(
     ],
     test_suite='',
     test_loader='unittest:TestLoader',
+    entry_points={
+        'console_scripts': [
+            'kconfgen=kconfgen:main',
+        ],
+    },
 )

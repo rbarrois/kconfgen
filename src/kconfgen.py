@@ -160,6 +160,10 @@ def main() -> None:
         )
 
     args = parser.parse_args()
+    if args.mode is None:
+        parser.print_help()
+        return
+
     kconf = load_kconf(
         kernel_sources=pathlib.Path(args.kernel_source),
         arch=args.arch,
@@ -174,6 +178,7 @@ def main() -> None:
         sys.stderr.write(">>> Written {ns} symbols.\n".format(
             ns=stats.nb_symbols,
         ))
+
     elif args.mode == Mode.SPLIT:
         try:
             categories = [line.strip() for line in args.categories]
