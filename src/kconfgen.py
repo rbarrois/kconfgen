@@ -18,18 +18,19 @@ class Stats(T.NamedTuple):
     files: T.List[pathlib.Path]
 
 
+def load_kconf(kernel_sources: pathlib.Path, arch: T.Text):
+    os.environ['srctree'] = str(kernel_sources)
+    os.environ['SRCARCH'] = arch
+
+    return kconfiglib.Kconfig()
+
+
 def defconfig_merge(
-        kernel_sources: pathlib.Path,
-        arch: T.Text,
+        kconf: kconfiglib.Kconfig,
         sources: T.List[pathlib.Path],
         fail_on_unknown: bool,
         output: T.TextIO,
 ) -> Stats:
-
-    os.environ['srctree'] = str(kernel_sources)
-    os.environ['SRCARCH'] = arch
-
-    kconf = kconfiglib.Kconfig()
 
     for path in sources:
         kconf.load_config(str(path), replace=False)
@@ -44,7 +45,7 @@ def defconfig_merge(
     )
 
     with tempfile.NamedTemporaryFile(mode='r') as f:
-        kconf.write_min_config(f.name)
+        kconf.write_min_config(f.name, header='')
         for line in f:
             output.write(line)
 
@@ -52,27 +53,27 @@ def defconfig_merge(
 
 
 def defconfig_split(
-        kernel_sources: pathlib.Path,
-        arch: T.Text,
+        kconf: kconfiglib.Kconfig,
         fail_on_unknown: bool,
         categories: T.List[T.Text],
         destdir: pathlib.Path,
         source: T.TextIO,
         prefix: T.Text,
 ) -> Stats:
-    os.environ['srctree'] = str(kernel_sources)
-    os.environ['SRCARCH'] = arch
 
-    kconf = kconfiglib.Kconfig()
+    with tempfile.TemporaryDirectory() as d:
+        config_path = os.path.join(d, '.config')
+        defconfig_path = os.path.join(d, 'defconfig')
+        with open(config_path, 'w', encoding='utf-8') as f:
+            for line in source:
+                f.write(line)
+        kconf.load_config(config_path)
 
-    with tempfile.NamedTemporaryFile(mode='w+') as f:
-        for line in source:
-            f.write(line)
-        f.flush()
-        kconf.load_config(f.name)
+        if fail_on_unknown and kconf.missing_syms:
+            raise ValueError("Unknown symbols: {}".format(kconf.missing_syms))
 
-    if fail_on_unknown and kconf.missing_syms:
-        raise ValueError("Unknown symbols: {}".format(kconf.missing_syms))
+        kconf.write_min_config(defconfig_path)
+        kconf.load_config(defconfig_path)
 
     symbols_by_category: T.Dict[T.Text, T.List[kconfiglib.Symbol]] = {cat: [] for cat in categories}
     symbols_by_category[''] = []
@@ -92,9 +93,9 @@ def defconfig_split(
         else:
             path = destdir / prefix
         stats.files.append(path)
-        with path.open('w', encoding='utf-8') as f:
+        with path.open('w', encoding='utf-8') as output:
             for symbol in symbols:
-                f.write(symbol.config_string)
+                output.write(symbol.config_string)
 
     return stats
 
@@ -125,9 +126,12 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    stats = defconfig_merge(
+    kconf = load_kconf(
         kernel_sources=pathlib.Path(args.kernel_source),
         arch=args.arch,
+    )
+    stats = defconfig_merge(
+        kconf=kconf,
         fail_on_unknown=args.fail_on_unknown,
         sources=args.sources,
         output=args.output,
