@@ -29,10 +29,11 @@ class KConfGenTestCase(unittest.TestCase):
 
 
 class MergeTests(KConfGenTestCase):
-    def assert_merge_result(self,
-            sources: T.List[T.Text],
-            expected: T.Text,
-            ) -> None:
+    def assert_merge_result(
+        self,
+        sources: T.List[T.Text],
+        expected: T.Text,
+    ) -> None:
 
         files = {
             self.workdir / "defconfig_{}".format(i): contents
@@ -43,7 +44,7 @@ class MergeTests(KConfGenTestCase):
                 f.write(contents)
 
         result = io.StringIO()
-        stats = kconfgen.defconfig_merge(
+        kconfgen.defconfig_merge(
             kconf=self.kconf,
             fail_on_unknown=True,
             sources=sorted(files.keys()),
@@ -100,11 +101,12 @@ CONFIG_CHEDDAR=y""",
 
 class SplitTests(KConfGenTestCase):
 
-    def assert_category_expansion(self,
+    def assert_category_expansion(
+            self,
             source: T.Text,
             categories: T.List[T.Text],
             expected: T.Dict[T.Text, T.Text],
-            ) -> None:
+    ) -> None:
 
         stats = kconfgen.defconfig_split(
             kconf=self.kconf,
