@@ -5,7 +5,7 @@ import codecs
 import os
 import re
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
