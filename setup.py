@@ -33,7 +33,7 @@ setup(
     author_email='raphael.barrois+%s@polytechnique.org' % PACKAGE,
     url='https://github.com/rbarrois/%s' % PACKAGE,
     keywords=['kconfgen', 'kconfig', 'kernel', 'linux', 'configuration', 'generator'],
-    packages=find_packages(SRC_DIR),
+    packages=[''],
     package_dir={'': SRC_DIR},
     zip_safe=False,
     license='MIT',
