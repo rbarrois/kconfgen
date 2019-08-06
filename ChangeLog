@@ -5,7 +5,9 @@ ChangeLog
 1.0.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+*Bugfix:*
+
+    * Fix packaging
 
 
 1.0.0 (2019-08-05)
