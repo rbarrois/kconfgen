@@ -17,10 +17,6 @@ matrix:
     - python: "3.7"
       env: TOXENV=py37
 
-    # Mutation
-    - python: "3.7"
-      env: TOXENV=mutpy
-
     # Linting
     - python: "3.7"
       env: TOXENV=lint
