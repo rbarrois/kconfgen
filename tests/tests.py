@@ -170,7 +170,7 @@ CONFIG_CHEDDAR=y""",
             f.write("CONFIG_SIDE_SALAD=y\n")
 
         subprocess.check_call([
-            'python', '-m', 'kconfgen', 'merge',
+            'kconfgen', 'merge',
             '--kernel-source', KCONF_ROOT,
             '--arch', 'x86',
             '--fail-on-unknown',
@@ -276,7 +276,7 @@ CONFIG_PICKLES=y""")
         os.mkdir(self.workdir / 'generated')
 
         subprocess.check_call([
-            'python', '-m', 'kconfgen', 'split',
+            'kconfgen', 'split',
             '--kernel-source', KCONF_ROOT,
             '--arch', 'x86',
             '--fail-on-unknown',

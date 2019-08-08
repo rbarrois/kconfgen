@@ -26,14 +26,14 @@ SRC_DIR = 'src'
 
 setup(
     name='kconfgen',
-    version=get_version('%s/%s.py' % (SRC_DIR, PACKAGE)),
+    version=get_version('%s/%s/__init__.py' % (SRC_DIR, PACKAGE)),
     description="A generator of (minimal) Linux kernel configuration files.",
     long_description=codecs.open(os.path.join(root_dir, 'README.rst'), 'r', 'utf-8').read(),
     author="Raphaël Barrois",
     author_email='raphael.barrois+%s@polytechnique.org' % PACKAGE,
     url='https://github.com/rbarrois/%s' % PACKAGE,
     keywords=['kconfgen', 'kconfig', 'kernel', 'linux', 'configuration', 'generator'],
-    packages=[''],
+    packages=[PACKAGE],
     package_dir={'': SRC_DIR},
     zip_safe=False,
     license='MIT',
@@ -61,7 +61,7 @@ setup(
     test_loader='unittest:TestLoader',
     entry_points={
         'console_scripts': [
-            'kconfgen=kconfgen:main',
+            'kconfgen=kconfgen.cli:main',
         ],
     },
 )
