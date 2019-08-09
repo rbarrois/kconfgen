@@ -60,7 +60,7 @@ test:
 
 # DOC: Run mutation testing
 mutation-test:
-	$(MUTPY) --report-html $(MUTPY_REPORTS) --target $(PACKAGE) --unit-test $(TESTS_DIR)
+	$(MUTPY) --report-html $(MUTPY_REPORTS) --target $(PACKAGE).core --unit-test $(TESTS_DIR)
 
 
 
