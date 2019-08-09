@@ -5,7 +5,9 @@ ChangeLog
 1.0.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+*New:*
+
+    - Simplify ``profiles.toml`` structure.
 
 
 1.0.1 (2019-08-06)
