@@ -108,11 +108,11 @@ The list of profiles and the ``defconfig`` files to use for them is listed in a 
 
   [ profile.example ]
   arch = x86
-  include = [ "shared.core", "shared.server" ]
+  include = [ "core", "server" ]
   extras = [ "defconfig.example", "defconfig.wifi_intel" ]
 
-  [ shared.core ]
+  [ include.core ]
   files = [ "defconfig.crypto", "defconfig.fs" ]
 
-  [ shared.server ]
+  [ include.server ]
   files = [ "defconfig.net", "defconfig.net_netfilter" ]

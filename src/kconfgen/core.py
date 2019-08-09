@@ -28,18 +28,18 @@ class CfgProfile(T.NamedTuple):
     extras: T.List[T.Text] = []
 
 
-class CfgShared(T.NamedTuple):
+class CfgInclude(T.NamedTuple):
     files: T.List[T.Text] = []
 
 
 class Configuration(T.NamedTuple):
     profiles: T.Dict[T.Text, CfgProfile]
-    shared: T.Dict[T.Text, CfgShared]
+    includes: T.Dict[T.Text, CfgInclude]
 
 
 def load_configuration(config: T.Mapping[T.Text, T.Any]) -> Configuration:
     profiles = config.get('profile', {})
-    shared = config.get('shared', {})
+    includes = config.get('include', {})
 
     errors = []
     for name, profile in sorted(profiles.items()):
@@ -48,14 +48,12 @@ def load_configuration(config: T.Mapping[T.Text, T.Any]) -> Configuration:
         if not profile.get('include') and not profile.get('extras'):
             errors.append("Missing 'include' or 'extras' for profile {}".format(name))
         for include in profile.get('include'):
-            if not include.startswith('shared.'):
-                errors.append("Invalid shared reference {s} in profile {p}".format(s=include, p=name))
-            if include[len('shared.'):] not in shared:
+            if include not in includes:
                 errors.append("Reference to missing group {s} in profile {p}".format(s=include, p=name))
 
-    for name, section in sorted(shared.items()):
+    for name, section in sorted(includes.items()):
         if 'files' not in section:
-            errors.append("Missing 'files' for shared group {}".format(name))
+            errors.append("Missing 'files' for include group {}".format(name))
 
     if errors:
         raise InvalidConfiguration(errors)
@@ -64,16 +62,16 @@ def load_configuration(config: T.Mapping[T.Text, T.Any]) -> Configuration:
         profiles={
             name: CfgProfile(
                 arch=profile['arch'],
-                include=[inc[len('shared.'):] for inc in profile.get('include', [])],
+                include=profile.get('include', []),
                 extras=profile.get('extras', []),
             )
             for name, profile in profiles.items()
         },
-        shared={
-            name: CfgShared(
+        includes={
+            name: CfgInclude(
                 files=section['files'] or [],
             )
-            for name, section in shared.items()
+            for name, section in includes.items()
         },
     )
 
@@ -107,7 +105,7 @@ def defconfig_for_target(
     profile = config.profiles[target]
     files: T.List[T.Text] = sum(
         (
-            config.shared[include].files
+            config.includes[include].files
             for include in profile.include
         ),
         [],

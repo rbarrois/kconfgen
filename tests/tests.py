@@ -33,15 +33,15 @@ class KConfGenTestCase(unittest.TestCase):
 class AssembleTests(KConfGenTestCase):
     def test_load_config(self):
         raw = """
-[shared.core]
+[include.core]
 files = ["defconfig.crypto", "defconfig.fs"]
 
 [profile.example]
 arch = "x86"
-include = [ "shared.core", "shared.server" ]
+include = [ "core", "server" ]
 extras = ["defconfig.example", "defconfig.wifi_intel"]
 
-[shared.server]
+[include.server]
 files = ["defconfig.net", "defconfig.net_netfilter"]
 """
 
@@ -56,11 +56,11 @@ files = ["defconfig.net", "defconfig.net_netfilter"]
                         extras=['defconfig.example', 'defconfig.wifi_intel'],
                     ),
                 },
-                shared={
-                    'core': kconfgen.CfgShared(
+                includes={
+                    'core': kconfgen.CfgInclude(
                         files=['defconfig.crypto', 'defconfig.fs'],
                     ),
-                    'server': kconfgen.CfgShared(
+                    'server': kconfgen.CfgInclude(
                         files=['defconfig.net', 'defconfig.net_netfilter'],
                     ),
                 },
@@ -94,9 +94,9 @@ files = ["defconfig.net", "defconfig.net_netfilter"]
             config="""
 [profile.example]
 arch = "x86"
-include = [ "shared.plusplus" ]
+include = [ "plusplus" ]
 extras = [ "defconfig.cheesy" ]
-[shared.plusplus]
+[include.plusplus]
 files = [ "defconfig.more", "defconfig.fullsides"]
 """,
             defconfigs={
