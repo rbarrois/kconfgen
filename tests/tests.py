@@ -30,6 +30,60 @@ class KConfGenTestCase(unittest.TestCase):
         super().tearDown()
 
 
+class CoreCliTests(unittest.TestCase):
+    def test_no_params(self):
+        res = subprocess.run(
+            ['kconfgen'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding='utf-8',
+        )
+        self.assertEqual(0, res.returncode)
+        self.assertEqual('', res.stderr)
+        # Description for commands
+        self.assertIn('kconfgen', res.stdout)
+        self.assertIn(' assemble', res.stdout)
+        self.assertIn(' split', res.stdout)
+        self.assertIn(' merge', res.stdout)
+        self.assertIn(' version', res.stdout)
+        self.assertIn(' help', res.stdout)
+
+    def test_version(self):
+        res = subprocess.run(
+            ['kconfgen', 'version'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding='utf-8',
+        )
+        self.assertEqual(0, res.returncode)
+        self.assertEqual('', res.stderr)
+        self.assertEqual("kconfgen v{}".format(kconfgen.__version__), res.stdout)
+
+    def test_full_help(self):
+        res = subprocess.run(
+            ['kconfgen', 'help'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding='utf-8',
+        )
+        self.assertEqual(0, res.returncode)
+        self.assertEqual('', res.stderr)
+
+        # Description of commands
+        self.assertIn('kconfgen', res.stdout)
+        self.assertIn('kconfgen assemble', res.stdout)
+        self.assertIn('kconfgen split', res.stdout)
+        self.assertIn('kconfgen merge', res.stdout)
+        self.assertIn(' version', res.stdout)
+        self.assertIn(' help', res.stdout)
+
+        # Parameters of commands
+        self.assertIn('--kernel-source', res.stdout)
+        self.assertIn('--arch', res.stdout)
+        self.assertIn('--categories', res.stdout)
+        self.assertIn('--root', res.stdout)
+
+
 class AssembleTests(KConfGenTestCase):
     def test_load_config(self):
         raw = """

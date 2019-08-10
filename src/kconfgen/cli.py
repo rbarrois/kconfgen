@@ -7,13 +7,23 @@ import sys
 
 import toml
 
-from . import defconfig_for_target, defconfig_merge, defconfig_split, load_configuration, load_kconf, PROFILES_FILENAME
+from . import (
+    PROFILES_FILENAME,
+    __version__,
+    defconfig_for_target,
+    defconfig_merge,
+    defconfig_split,
+    load_configuration,
+    load_kconf,
+)
 
 
 class Mode(enum.Enum):
+    ASSEMBLE = 'assemble'
+    HELP = 'help'
     MERGE = 'merge'
     SPLIT = 'split'
-    ASSEMBLE = 'assemble'
+    VERSION = 'version'
 
 
 def main() -> None:
@@ -24,6 +34,18 @@ def main() -> None:
     )
     parser.set_defaults(mode=None)
     subparsers = parser.add_subparsers(help="Modes")
+
+    version_parser = subparsers.add_parser(
+        'version',
+        help="Display the version number",
+    )
+    version_parser.set_defaults(mode=Mode.VERSION)
+
+    help_parser = subparsers.add_parser(
+        'help',
+        help="Display the full documentation",
+    )
+    help_parser.set_defaults(mode=Mode.HELP)
 
     assemble_parser = subparsers.add_parser(
         'assemble',
@@ -161,6 +183,18 @@ def main() -> None:
             ns=stats.nb_symbols,
             t=args.target,
         ))
+
+    elif args.mode == Mode.VERSION:
+        sys.stdout.write("kconfgen v{}".format(__version__))
+
+    elif args.mode == Mode.HELP:
+        parser.print_help()
+        for subparser in [assemble_parser, merge_parser, split_parser]:
+            sys.stdout.write('\n\n')
+            sys.stdout.write('{}\n'.format(subparser.prog))
+            sys.stdout.write('{}\n'.format('-' * len(subparser.prog)))
+            subparser.print_help()
+
     else:
         assert args.mode is None
         parser.print_help()
