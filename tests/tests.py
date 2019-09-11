@@ -122,7 +122,7 @@ files = ["defconfig.net", "defconfig.net_netfilter"]
             loaded,
         )
 
-    def assert_assemble_result(self, config: T.Text, defconfigs: T.Dict[T.Text, T.Text], expected: T.Text):
+    def prepare(self, config: T.Text, defconfigs: T.Dict[T.Text, T.Text]):
         with open(self.workdir / kconfgen.PROFILES_FILENAME, 'w') as f:
             f.write(config)
 
@@ -130,21 +130,8 @@ files = ["defconfig.net", "defconfig.net_netfilter"]
             with open(self.workdir / 'defconfig.{}'.format(fname), 'w') as f:
                 f.write(contents)
 
-        subprocess.check_call([
-            'kconfgen', 'assemble',
-            '--kernel-source', KCONF_ROOT,
-            '--fail-on-unknown',
-            '--root', self.workdir,
-            '--output', self.workdir / 'output',
-            'example',
-        ])
-
-        with open(self.workdir / 'output', 'r') as f:
-            results = ''.join(f)
-        self.assertEqual(expected, results)
-
     def test_assemble(self):
-        self.assert_assemble_result(
+        self.prepare(
             config="""
 [profile.example]
 arch = "x86"
@@ -158,23 +145,88 @@ files = [ "defconfig.more", "defconfig.fullsides"]
                 'more': "CONFIG_EXTRA_CHEDDAR=y",
                 'fullsides': "CONFIG_SIDE_FRIES_LOADED=y\nCONFIG_PICKLES=y",
             },
-            expected="""CONFIG_SIDE_FRIES_LOADED=y
+        )
+
+        expected = """CONFIG_SIDE_FRIES_LOADED=y
 CONFIG_EXTRA_CHEDDAR=y
 CONFIG_SAUCE_BLUE_CHEESE=y
 CONFIG_PICKLES=y
+"""
+
+        subprocess.check_call([
+            'kconfgen', 'assemble',
+            '--kernel-source', KCONF_ROOT,
+            '--fail-on-unknown',
+            '--root', self.workdir,
+            '--output', self.workdir / 'output',
+            'example',
+        ])
+
+        with open(self.workdir / 'output', 'r') as f:
+            results = ''.join(f)
+
+        self.assertEqual(expected, results)
+
+    def test_assemble_extra_include(self):
+        self.prepare(
+            config="""
+[profile.example]
+arch = "x86"
+include = [ ]
+extras = [ "defconfig.cheesy" ]
+[include.plusplus]
+files = [ "defconfig.more", "defconfig.fullsides"]
+[include.more]
+files = []
 """,
+            defconfigs={
+                'cheesy': "CONFIG_CHEDDAR=y\nCONFIG_SAUCE_BLUE_CHEESE=y\nCONFIG_SIDE_FRIES_LOADED=y",
+                'more': "CONFIG_EXTRA_CHEDDAR=y",
+                'fullsides': "CONFIG_SIDE_FRIES_LOADED=y\nCONFIG_PICKLES=y",
+            },
         )
 
+        expected = """CONFIG_SIDE_FRIES_LOADED=y
+CONFIG_EXTRA_CHEDDAR=y
+CONFIG_SAUCE_BLUE_CHEESE=y
+CONFIG_PICKLES=y
+"""
+
+        subprocess.check_call([
+            'kconfgen', 'assemble',
+            '--kernel-source', KCONF_ROOT,
+            '--fail-on-unknown',
+            '--root', self.workdir,
+            '--output', self.workdir / 'output',
+            '--include', 'plusplus', 'more',
+            '--',
+            'example',
+        ])
+
+        with open(self.workdir / 'output', 'r') as f:
+            results = ''.join(f)
+
+        self.assertEqual(expected, results)
+
     def test_bad_config(self):
+        self.prepare(
+            # Invalid config: no quotes
+            config="[profile.example]\narch = x86\nextras=[ defconfig.cheesy ]",
+            defconfigs={
+                'cheesy': "CONFIG_CHEDDAR=y\nCONFIG_SAUCE_BLUE_CHEESE=y\nCONFIG_SIDE_FRIES_LOADED=y",
+            },
+        )
+
         with self.assertRaises(subprocess.CalledProcessError):
-            self.assert_assemble_result(
-                # Invalid config: no quotes
-                config="[profile.example]\narch = x86\nextras=[ defconfig.cheesy ]",
-                defconfigs={
-                    'cheesy': "CONFIG_CHEDDAR=y\nCONFIG_SAUCE_BLUE_CHEESE=y\nCONFIG_SIDE_FRIES_LOADED=y",
-                },
-                expected="",
-            )
+
+            subprocess.check_call([
+                'kconfgen', 'assemble',
+                '--kernel-source', KCONF_ROOT,
+                '--fail-on-unknown',
+                '--root', self.workdir,
+                '--output', self.workdir / 'output',
+                'example',
+            ])
 
         self.assertFalse(os.path.exists(self.workdir / 'output'))
 

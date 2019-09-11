@@ -105,13 +105,15 @@ def defconfig_for_target(
         config: Configuration,
         target: T.Text,
         root: pathlib.Path,
+        extra_include: T.List[T.Text],
 ) -> Profile:
 
     profile = config.profiles[target]
+    includes = profile.include + extra_include
     files: T.List[T.Text] = sum(
         (
             config.includes[include].files
-            for include in profile.include
+            for include in includes
         ),
         [],
     )

@@ -115,3 +115,14 @@ The list of profiles and the ``defconfig`` files to use for them is listed in a 
 
   [ include.server ]
   files = [ "defconfig.net", "defconfig.net_netfilter" ]
+
+
+It is also possible to dynamically include more sections:
+
+.. code-block:: sh
+
+    # Don't forget the `--` to separate the profile from extra includes
+    kconfgen assemble \
+        --kernel=/usr/src/linux-4.19.57 \
+        --include sound wireless \
+        -- some-profile > defconfig

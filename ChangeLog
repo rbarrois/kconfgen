@@ -5,6 +5,11 @@ ChangeLog
 1.1.2 (unreleased)
 ------------------
 
+*New:*
+
+    - Add ``--include`` option to ``kconfgen assemble``: allows inclusion of
+      extra sections to the generated defconfig.
+
 *Bugfix:*
 
     - Don't create empty output files when the processing fails.

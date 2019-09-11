@@ -61,6 +61,10 @@ def main() -> None:
         default='-', help="Path of the generated defconfig file",
     )
     assemble_parser.add_argument(
+        '--include', '-i', type=str, nargs='*',
+        default=[], help="Extra sections to include",
+    )
+    assemble_parser.add_argument(
         'profile', help="Assemble a defconfig file for PROFILE",
     )
 
@@ -172,6 +176,7 @@ def main() -> None:
             config=config,
             target=args.profile,
             root=args.root,
+            extra_include=args.include,
         )
         kconf = load_kconf(
             kernel_sources=pathlib.Path(args.kernel_source),
