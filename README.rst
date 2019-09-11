@@ -99,15 +99,14 @@ Assemble a ``defconfig`` file for a specific profile:
 
   kconfgen assemble \
     --kernel=/usr/src/linux-4.19.57 \
-    --profiles=profiles.toml \
-    some-profile > .config
+    some-profile > defconfig
 
 The list of profiles and the ``defconfig`` files to use for them is listed in a toml file:
 
 .. code-block:: toml
 
   [ profile.example ]
-  arch = x86
+  arch = "x86"
   include = [ "core", "server" ]
   extras = [ "defconfig.example", "defconfig.wifi_intel" ]
 

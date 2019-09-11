@@ -49,7 +49,7 @@ def main() -> None:
 
     assemble_parser = subparsers.add_parser(
         'assemble',
-        help="Assemble a defconfig file for a chosen target",
+        help="Assemble a defconfig file for a chosen profile",
     )
     assemble_parser.set_defaults(mode=Mode.ASSEMBLE)
     assemble_parser.add_argument(
@@ -61,7 +61,7 @@ def main() -> None:
         default='-', help="Path of the generated defconfig file",
     )
     assemble_parser.add_argument(
-        'target', help="Assemble a defconfig file for TARGET",
+        'profile', help="Assemble a defconfig file for PROFILE",
     )
 
     merge_parser = subparsers.add_parser('merge', help="Merge deconfig files")
@@ -170,7 +170,7 @@ def main() -> None:
         config = load_configuration(profiles)
         profile = defconfig_for_target(
             config=config,
-            target=args.target,
+            target=args.profile,
             root=args.root,
         )
         kconf = load_kconf(
@@ -189,7 +189,7 @@ def main() -> None:
                 f.write(result.output)
         sys.stderr.write(">>> Written {ns} symbols for {t}.\n".format(
             ns=result.stats.nb_symbols,
-            t=args.target,
+            t=args.profile,
         ))
 
     elif args.mode == Mode.VERSION:
