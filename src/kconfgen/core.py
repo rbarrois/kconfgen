@@ -35,6 +35,7 @@ class CfgInclude(T.NamedTuple):
 class Configuration(T.NamedTuple):
     profiles: T.Dict[T.Text, CfgProfile]
     includes: T.Dict[T.Text, CfgInclude]
+    fragments_dir: T.Text = ''
 
 
 def load_configuration(config: T.Mapping[T.Text, T.Any]) -> Configuration:
@@ -55,6 +56,11 @@ def load_configuration(config: T.Mapping[T.Text, T.Any]) -> Configuration:
         if 'files' not in section:
             errors.append("Missing 'files' for include group {}".format(name))
 
+    try:
+        fragments_dir = config['core']['fragments_dir']
+    except KeyError:
+        fragments_dir = ''
+
     if errors:
         raise InvalidConfiguration(errors)
 
@@ -73,6 +79,7 @@ def load_configuration(config: T.Mapping[T.Text, T.Any]) -> Configuration:
             )
             for name, section in includes.items()
         },
+        fragments_dir=fragments_dir,
     )
 
 
@@ -121,7 +128,7 @@ def defconfig_for_target(
 
     return Profile(
         arch=profile.arch,
-        files=[root / filename for filename in files],
+        files=[root / config.fragments_dir / filename for filename in files],
     )
 
 
@@ -132,7 +139,7 @@ def defconfig_merge(
 ) -> GenerationResult:
 
     for path in sources:
-        kconf.load_config(str(path), replace=False)
+        kconf.load_config(str(path.absolute()), replace=False)
         if kconf.missing_syms and fail_on_unknown:
             raise ValueError("Unknown symbols: {}".format(kconf.missing_syms))
 

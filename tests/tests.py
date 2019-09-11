@@ -122,12 +122,17 @@ files = ["defconfig.net", "defconfig.net_netfilter"]
             loaded,
         )
 
-    def prepare(self, config: T.Text, defconfigs: T.Dict[T.Text, T.Text]):
+    def prepare(self, config: T.Text, defconfigs: T.Dict[T.Text, T.Text], fragments_dir: T.Text = ''):
         with open(self.workdir / kconfgen.PROFILES_FILENAME, 'w') as f:
             f.write(config)
 
+        fragments_path = self.workdir
+        if fragments_dir:
+            fragments_path = fragments_path / fragments_dir
+            fragments_path.mkdir()
+
         for fname, contents in defconfigs.items():
-            with open(self.workdir / 'defconfig.{}'.format(fname), 'w') as f:
+            with open(fragments_path / 'defconfig.{}'.format(fname), 'w') as f:
                 f.write(contents)
 
     def test_assemble(self):
@@ -140,6 +145,47 @@ extras = [ "defconfig.cheesy" ]
 [include.plusplus]
 files = [ "defconfig.more", "defconfig.fullsides"]
 """,
+            defconfigs={
+                'cheesy': "CONFIG_CHEDDAR=y\nCONFIG_SAUCE_BLUE_CHEESE=y\nCONFIG_SIDE_FRIES_LOADED=y",
+                'more': "CONFIG_EXTRA_CHEDDAR=y",
+                'fullsides': "CONFIG_SIDE_FRIES_LOADED=y\nCONFIG_PICKLES=y",
+            },
+        )
+
+        expected = """CONFIG_SIDE_FRIES_LOADED=y
+CONFIG_EXTRA_CHEDDAR=y
+CONFIG_SAUCE_BLUE_CHEESE=y
+CONFIG_PICKLES=y
+"""
+
+        subprocess.check_call([
+            'kconfgen', 'assemble',
+            '--kernel-source', KCONF_ROOT,
+            '--fail-on-unknown',
+            '--root', self.workdir,
+            '--output', self.workdir / 'output',
+            'example',
+        ])
+
+        with open(self.workdir / 'output', 'r') as f:
+            results = ''.join(f)
+
+        self.assertEqual(expected, results)
+
+    def test_assemble_subdif(self):
+        self.prepare(
+            config="""
+[core]
+fragments_dir = "fragments"
+
+[profile.example]
+arch = "x86"
+include = [ "plusplus" ]
+extras = [ "defconfig.cheesy" ]
+[include.plusplus]
+files = [ "defconfig.more", "defconfig.fullsides"]
+""",
+            fragments_dir='fragments',
             defconfigs={
                 'cheesy': "CONFIG_CHEDDAR=y\nCONFIG_SAUCE_BLUE_CHEESE=y\nCONFIG_SIDE_FRIES_LOADED=y",
                 'more': "CONFIG_EXTRA_CHEDDAR=y",

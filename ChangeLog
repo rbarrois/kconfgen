@@ -5,7 +5,9 @@ ChangeLog
 1.2.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+*Bugfix:*
+
+    - Honour ``core.fragments_dir`` in ``profiles.toml``.
 
 
 1.2.0 (2019-09-12)
