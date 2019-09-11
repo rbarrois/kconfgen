@@ -1,4 +1,4 @@
-__version__ = '1.1.2.dev0'
+__version__ = '1.2.0'
 
 
 from .core import (  # noqa: F401
