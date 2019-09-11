@@ -5,7 +5,9 @@ ChangeLog
 1.1.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+*Bugfix:*
+
+    - Don't create empty output files when the processing fails.
 
 
 1.1.1 (2019-08-10)

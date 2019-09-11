@@ -165,6 +165,19 @@ CONFIG_PICKLES=y
 """,
         )
 
+    def test_bad_config(self):
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.assert_assemble_result(
+                # Invalid config: no quotes
+                config="[profile.example]\narch = x86\nextras=[ defconfig.cheesy ]",
+                defconfigs={
+                    'cheesy': "CONFIG_CHEDDAR=y\nCONFIG_SAUCE_BLUE_CHEESE=y\nCONFIG_SIDE_FRIES_LOADED=y",
+                },
+                expected="",
+            )
+
+        self.assertFalse(os.path.exists(self.workdir / 'output'))
+
 
 class MergeTests(KConfGenTestCase):
     def assert_merge_result(
@@ -181,15 +194,13 @@ class MergeTests(KConfGenTestCase):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(contents)
 
-        result = io.StringIO()
-        kconfgen.defconfig_merge(
+        result = kconfgen.defconfig_merge(
             kconf=self.kconf,
             fail_on_unknown=True,
             sources=sorted(files.keys()),
-            output=result,
         )
 
-        self.assertEqual(expected, result.getvalue())
+        self.assertEqual(expected, result.output)
 
     def test_empty(self):
         self.assert_merge_result(

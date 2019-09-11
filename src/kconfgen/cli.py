@@ -57,8 +57,8 @@ def main() -> None:
         default='.', help="Profiles repository root",
     )
     assemble_parser.add_argument(
-        '--output', '-o', type=argparse.FileType('w', encoding='utf-8'),
-        default=sys.stdout, help="Path of the generated defconfig file",
+        '--output', '-o', type=str,
+        default='-', help="Path of the generated defconfig file",
     )
     assemble_parser.add_argument(
         'target', help="Assemble a defconfig file for TARGET",
@@ -71,8 +71,8 @@ def main() -> None:
         help="Source files to read, in order",
     )
     merge_parser.add_argument(
-        '--output', '-o', type=argparse.FileType('w', encoding='utf-8'),
-        default=sys.stdout, help="Path of the generated defconfig file",
+        '--output', '-o', type=str,
+        default='-', help="Path of the generated defconfig file",
     )
     merge_parser.add_argument(
         '--arch', type=str, required=True,
@@ -127,14 +127,18 @@ def main() -> None:
             kernel_sources=pathlib.Path(args.kernel_source),
             arch=args.arch,
         )
-        stats = defconfig_merge(
+        result = defconfig_merge(
             kconf=kconf,
             fail_on_unknown=args.fail_on_unknown,
             sources=args.sources,
-            output=args.output,
         )
+        if args.output == '-':
+            sys.stdout.write(result.output)
+        else:
+            with open(args.output, 'w', encoding='utf-8') as f:
+                f.write(result.output)
         sys.stderr.write(">>> Written {ns} symbols.\n".format(
-            ns=stats.nb_symbols,
+            ns=result.stats.nb_symbols,
         ))
 
     elif args.mode == Mode.SPLIT:
@@ -173,14 +177,18 @@ def main() -> None:
             kernel_sources=pathlib.Path(args.kernel_source),
             arch=profile.arch,
         )
-        stats = defconfig_merge(
+        result = defconfig_merge(
             kconf=kconf,
             fail_on_unknown=args.fail_on_unknown,
             sources=profile.files,
-            output=args.output,
         )
+        if args.output == '-':
+            sys.stdout.write(result.output)
+        else:
+            with open(args.output, 'w', encoding='utf-8') as f:
+                f.write(result.output)
         sys.stderr.write(">>> Written {ns} symbols for {t}.\n".format(
-            ns=stats.nb_symbols,
+            ns=result.stats.nb_symbols,
             t=args.target,
         ))
 

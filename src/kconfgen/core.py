@@ -96,6 +96,11 @@ class Stats(T.NamedTuple):
     files: T.List[pathlib.Path]
 
 
+class GenerationResult(T.NamedTuple):
+    stats: Stats
+    output: T.Text
+
+
 def defconfig_for_target(
         config: Configuration,
         target: T.Text,
@@ -122,8 +127,7 @@ def defconfig_merge(
         kconf: kconfiglib.Kconfig,
         sources: T.List[pathlib.Path],
         fail_on_unknown: bool,
-        output: T.TextIO,
-) -> Stats:
+) -> GenerationResult:
 
     for path in sources:
         kconf.load_config(str(path), replace=False)
@@ -139,10 +143,12 @@ def defconfig_merge(
 
     with tempfile.NamedTemporaryFile(mode='r') as f:
         kconf.write_min_config(f.name, header='')
-        for line in f:
-            output.write(line)
+        lines = f.read()
 
-    return stats
+    return GenerationResult(
+        stats=stats,
+        output=lines,
+    )
 
 
 def defconfig_split(
