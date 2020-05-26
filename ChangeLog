@@ -5,7 +5,7 @@ ChangeLog
 1.2.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Compatible with Python 3.8
 
 
 1.2.1 (2019-09-12)
